@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact name="CSVimport">
+    <output-path>$PROJECT_DIR$/out/artifacts/CSVimport</output-path>
+    <root id="root">
+      <element id="module-output" name="CSVimport" />
+    </root>
+  </artifact>
+</component>
