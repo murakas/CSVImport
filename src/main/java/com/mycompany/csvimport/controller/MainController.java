@@ -28,17 +28,21 @@ public class MainController {
     @POST
     @Path("/import")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public String run(@FormParam("inputFile") String inputFile,
-                      @FormParam("outputDir") String outputDir,
-                      @FormParam("outputDirInDocker") String outputDirInDocker,
-                      @FormParam("connectionString") String connectionString,
-                      @FormParam("user") String user,
-                      @FormParam("pass") String pass,
-                      @FormParam("tableName") String tableName) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public String run(String importJson) {
+        long startTime = System.currentTimeMillis();
+        JsonElement element = JsonParser.parseString(importJson);
+
+        String inputFile = element.getAsJsonObject().get("inputFile").getAsString();
+        String outputDir = element.getAsJsonObject().get("outputDir").getAsString();
+        String outputDirInDocker = outputDir; //пока без docker
+        String connectionString = element.getAsJsonObject().get("connectionString").getAsString();
+        String user = element.getAsJsonObject().get("user").getAsString();
+        String pass = element.getAsJsonObject().get("pass").getAsString();
+        String tableName = element.getAsJsonObject().get("tableName").getAsString();
 
         String timestamp_start = DATE_FORMAT.format(new Date().getTime());
-        long startTime = System.currentTimeMillis();
+
 
         System.out.println("LOG: " + timestamp_start + " | Start");
 
