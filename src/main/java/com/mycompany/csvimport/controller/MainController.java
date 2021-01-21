@@ -130,8 +130,8 @@ public class MainController {
     @POST
     @Path("/update")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public String update(@FormParam("updateJson") String updateJson) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public String update(String updateJson) {
         long startTime = System.currentTimeMillis();
 
         JsonElement element = JsonParser.parseString(updateJson);
