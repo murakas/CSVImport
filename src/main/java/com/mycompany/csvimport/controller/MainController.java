@@ -185,18 +185,22 @@ public class MainController {
             boolean isComparisonField = entry.getValue().getAsJsonObject().get("comparisonField").getAsBoolean();
 
             //поля которые нужно обновить
-            JsonElement jsonElement = entry.getValue().getAsJsonObject().get("columnsSource");
-            if (!jsonElement.isJsonNull()) {
-                JsonArray array = jsonElement.getAsJsonArray();
-                String[] strings = new String[array.size()];
-                for (int i = 0; i < array.size(); i++) {
-                    strings[i] = array.get(i).getAsString();
+            JsonElement columnsSource = entry.getValue().getAsJsonObject().get("columnsSource");
+            if (!columnsSource.isJsonNull()) {
+                JsonArray arrayColumnsSource = columnsSource.getAsJsonArray();
+                String[] columnStrings = new String[arrayColumnsSource.size()];
+                for (int i = 0; i < arrayColumnsSource.size(); i++) {
+                    columnStrings[i] = arrayColumnsSource.get(i).getAsString();
                 }
                 String joinedInsert;
-                if (strings.length > 1) {
-                    joinedInsert = "concat_ws(',', " + String.join(",", strings) + ") as c" + c;
+                if (columnStrings.length > 1) {
+                    joinedInsert = "concat_ws(',', " + String.join(",", columnStrings) + ") as c" + c;
                 } else {
-                    joinedInsert = "(" + String.join(",", strings) + ") as c" + c;
+                    String distinct = "";
+                    if (entry.getKey().equals("unical_id"))
+                        distinct = "distinct on (" + String.join(",", columnStrings) + ") ";
+
+                    joinedInsert = distinct + "(" + String.join(",", columnStrings) + ") as c" + c;
                 }
                 insertColumns.put(entry.getKey(), joinedInsert); //поля
 

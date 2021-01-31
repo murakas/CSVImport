@@ -1,10 +1,13 @@
-CREATE OR REPLACE FUNCTION "public"."import_csv"("csv_file" text, "target_table" text)
-  RETURNS "pg_catalog"."varchar" AS $BODY$
+CREATE OR REPLACE FUNCTION public.import_csv(csv_file text, target_table text)
+ RETURNS character varying
+ LANGUAGE plpgsql
+AS $function$
 DECLARE
 	column_ text;
 	cmd VARCHAR ;
 	array_columns text[];
 	delimiter_ text;
+	table_size varchar;
 	--StartTime timestamptz;
   	--EndTime timestamptz;
 	--time_execution varchar;
@@ -40,9 +43,6 @@ begin
 		execute format('alter table temp_table add column %s text;', replace(column_,':','_'));
 	END LOOP;
 
-    --Добавим id
-    execute format('')
-
 	--Так как " используется для обрамления значений по умолчанию то будет использоваться следующая конструкция
 	if delimiter_ = '"' then
 		execute format('copy temp_table from %L with delimiter ''"'' quote '''''' HEADER csv ', csv_file);
@@ -66,7 +66,7 @@ begin
     --time_execution := format ('Time = %s; ',EndTime - StartTime);
 
 	--RETURN time_execution || 'Items = '  || count_;
-	RETURN 'ok';
-end $BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100
+	select pg_relation_size(target_table) into table_size;
+	RETURN table_size;
+end $function$
+;

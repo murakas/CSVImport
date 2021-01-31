@@ -33,7 +33,7 @@ public class MainTest {
 
         //2-Формируем запрос
 
-        File myObj = new File("C:\\Users\\Murad\\Downloads\\import_productive_awin.json");
+        File myObj = new File("C:\\Users\\Murad\\Downloads\\import_productive_webgains.json");
         StringBuilder data = new StringBuilder();
 
         try {
@@ -103,7 +103,11 @@ public class MainTest {
                 if (strings.length > 1) {
                     joinedInsert = "concat_ws(',', " + String.join(",", strings) + ") as c" + c;
                 } else {
-                    joinedInsert = "(" + String.join(",", strings) + ") as c" + c;
+                    String distinct = "";
+                    if (entry.getKey().equals("unical_id"))
+                        distinct = "distinct on (" + String.join(",", strings) + ") ";
+
+                    joinedInsert = distinct + "(" + String.join(",", strings) + ") as c" + c;
                 }
                 insertColumns.put(entry.getKey(), joinedInsert); //поля
 

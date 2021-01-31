@@ -1,7 +1,7 @@
 <component name="ArtifactManager">
   <artifact type="jar" name="CSVimport:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/CSVimport_jar</output-path>
-    <root id="archive" name="CSVimport_1.5.jar">
+    <root id="archive" name="CSVimport_1.6.jar">
       <element id="module-output" name="CSVimport" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/jakarta/ws/rs/jakarta.ws.rs-api/2.1.6/jakarta.ws.rs-api-2.1.6.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/glassfish/jersey/media/jersey-media-jaxb/2.32/jersey-media-jaxb-2.32.jar" path-in-jar="/" />
