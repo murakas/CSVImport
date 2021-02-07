@@ -97,54 +97,115 @@ public class Util {
         this.isTerminal = isTerminal;
     }
 
-    public File downloadFile(String fileURL, String saveDir) {
-        File outputFile = null;
+    //    public File getFile(String fileURL, String saveDir) {
+//        File outputFile = null;
+//        HttpURLConnection httpConn;
+//        try {
+//            URL url = new URL(fileURL);
+//            httpConn = (HttpURLConnection) url.openConnection();
+//            int responseCode = httpConn.getResponseCode();
+//            if (responseCode == HttpURLConnection.HTTP_OK) {
+//                String fileName = null;
+//                String disposition = httpConn.getHeaderField("Content-Disposition");
+//                if (disposition != null) {
+//                    int index = disposition.indexOf("filename=") - 1;
+//                    if (index > 0) {
+//                        fileName = disposition.substring(index + 10);
+//                    }
+//                } else {
+//                    fileName = fileURL.substring(fileURL.lastIndexOf("/") + 1);
+//                }
+//
+//                System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | Download file " + fileName);
+//
+//                if (fileName != null) {
+//                    fileName = fileName.replaceAll("([,\\\\:*?\"<>|+%!@#$^&=;])", "");
+//                    if (fileName.length() > 250) fileName = fileName.substring(250);
+//                }
+//
+//                InputStream inputStream = httpConn.getInputStream();
+//                String saveFilePath = saveDir + File.separator + fileName;
+//
+//                ReadableByteChannel channel = Channels.newChannel(inputStream);
+//                outputFile = new File(saveFilePath);
+//                FileOutputStream outputStream = new FileOutputStream(outputFile);
+//                outputStream.getChannel().transferFrom(channel, 0, Long.MAX_VALUE);
+//                outputStream.close();
+//                channel.close();
+//                inputStream.close();
+//                httpConn.disconnect();
+//
+//            } else {
+//                if (!isTerminal)
+//                    System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | An error occurred while trying to download the file. Server returned HTTP code: " + responseCode);
+//            }
+//            httpConn.disconnect();
+//        } catch (IOException e) {
+//            if (!isTerminal)
+//                System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | Unknown error while trying to download a file: " + e.getMessage());
+//        }
+//        return outputFile;
+//    }
+    public File getFile(String fileURL, String saveDir) {
         HttpURLConnection httpConn;
+//        String disposition = httpConn.getHeaderField("Content-Disposition");
+//        File outputFile = downloadFile(fileURL, saveDir, disposition, httpConn.getInputStream());
+
+
         try {
             URL url = new URL(fileURL);
             httpConn = (HttpURLConnection) url.openConnection();
+            short status = -1;
             int responseCode = httpConn.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                String fileName = null;
-                String disposition = httpConn.getHeaderField("Content-Disposition");
-                if (disposition != null) {
-                    int index = disposition.indexOf("filename=") - 1;
-                    if (index > 0) {
-                        fileName = disposition.substring(index + 10);
-                    }
-                } else {
-                    fileName = fileURL.substring(fileURL.lastIndexOf("/") + 1);
-                }
-
-                if (!isTerminal)
-                    System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | Download file " + fileName);
-
-                if (fileName != null) {
-                    fileName = fileName.replaceAll("([,\\\\:*?\"<>|+%!@#$^&=;])", "");
-                    if (fileName.length() > 250) fileName = fileName.substring(250);
-                }
-
-                InputStream inputStream = httpConn.getInputStream();
-                String saveFilePath = saveDir + File.separator + fileName;
-
-                ReadableByteChannel channel = Channels.newChannel(inputStream);
-                outputFile = new File(saveFilePath);
-                FileOutputStream outputStream = new FileOutputStream(outputFile);
-                outputStream.getChannel().transferFrom(channel, 0, Long.MAX_VALUE);
-                outputStream.close();
-                channel.close();
-                inputStream.close();
-                httpConn.disconnect();
-
-            } else {
-                if (!isTerminal)
-                    System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | An error occurred while trying to download the file. Server returned HTTP code: " + responseCode);
+                status = 0;
             }
+            if (responseCode == HttpURLConnection.HTTP_MOVED_TEMP ||
+                    responseCode == HttpURLConnection.HTTP_MOVED_PERM ||
+                    responseCode == HttpURLConnection.HTTP_SEE_OTHER) {
+                status = 1;
+            }
+
+            if(status = 1)
+
             httpConn.disconnect();
         } catch (IOException e) {
             if (!isTerminal)
                 System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | Unknown error while trying to download a file: " + e.getMessage());
         }
+
+
+        return outputFile;
+    }
+
+    private File downloadFile(String fileURL, String saveDir, String disposition, InputStream inputStream) throws IOException {
+        String fileName = null;
+        if (disposition != null) {
+            int index = disposition.indexOf("filename=") - 1;
+            if (index > 0) {
+                fileName = disposition.substring(index + 10);
+            }
+        } else {
+            fileName = fileURL.substring(fileURL.lastIndexOf("/") + 1);
+        }
+
+        System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | Download file " + fileName);
+
+        if (fileName != null) {
+            fileName = fileName.replaceAll("([,\\\\:*?\"<>|+%!@#$^&=;])", "");
+            if (fileName.length() > 250) fileName = fileName.substring(250);
+        }
+
+        String saveFilePath = saveDir + File.separator + fileName;
+
+        ReadableByteChannel channel = Channels.newChannel(inputStream);
+        File outputFile = new File(saveFilePath);
+        FileOutputStream outputStream = new FileOutputStream(outputFile);
+        outputStream.getChannel().transferFrom(channel, 0, Long.MAX_VALUE);
+        outputStream.close();
+        channel.close();
+        inputStream.close();
+
         return outputFile;
     }
 

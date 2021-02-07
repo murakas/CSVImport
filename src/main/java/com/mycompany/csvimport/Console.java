@@ -34,7 +34,7 @@ public class Console {
         Pattern patternHttp = Pattern.compile("^(https?://)");
         if (patternHttp.matcher(inputFile).find()) {
             //Качаем файл
-            File file = UTIL.downloadFile(inputFile, outputDir);
+            File file = UTIL.getFile(inputFile, outputDir);
             //Проверка
             if (file != null && file.exists()) {
                 inputFile = file.getPath();

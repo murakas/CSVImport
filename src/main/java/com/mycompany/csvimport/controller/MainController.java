@@ -8,6 +8,9 @@ import com.mycompany.csvimport.model.response.Response;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
@@ -54,7 +57,7 @@ public class MainController {
         Pattern patternHttp = Pattern.compile("^(https?://)");
         if (patternHttp.matcher(inputFile).find()) {
             //Качаем файл
-            File file = UTIL.downloadFile(inputFile, outputDir);
+            File file = UTIL.getFile(inputFile, outputDir);
             //Проверка
             if (file != null && file.exists()) {
                 inputFile = file.getPath();
@@ -137,7 +140,13 @@ public class MainController {
     @Consumes(MediaType.APPLICATION_JSON)
     public String update(String updateJson) {
         long startTime = System.currentTimeMillis();
-
+        try {
+            URI uri = getClass().getResource("/update_csv.sql").toURI();
+            String content = new String(Files.readAllBytes(Paths.get(uri)));
+            System.out.println(content);
+        } catch (Exception e) {
+            System.err.println(e);
+        }
         JsonElement element = JsonParser.parseString(updateJson);
         JsonObject jsonObjConnTarget = element.getAsJsonObject().getAsJsonObject("dbTarget");
         JsonObject jsonObjConnSource = element.getAsJsonObject().getAsJsonObject("dbSource");

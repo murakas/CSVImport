@@ -39,7 +39,8 @@ begin
 
 	--Создадим поля в таблице на основании массива
 	FOREACH column_ IN ARRAY array_columns
-	LOOP
+	loop
+		column_ = column_ || '_column';
 		execute format('alter table temp_table add column %s text;', replace(column_,':','_'));
 	END LOOP;
 
