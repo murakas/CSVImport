@@ -8,6 +8,7 @@ import com.mycompany.csvimport.model.response.Response;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -32,7 +33,7 @@ public class MainController {
     @Path("/import")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public String run(String importJson) {
+    public String importCsv(String importJson) {
         long startTime = System.currentTimeMillis();
         JsonElement element = JsonParser.parseString(importJson);
 
@@ -56,13 +57,15 @@ public class MainController {
         //Если файл из интернета
         Pattern patternHttp = Pattern.compile("^(https?://)");
         if (patternHttp.matcher(inputFile).find()) {
-            //Качаем файл
-            File file = UTIL.getFile(inputFile, outputDir);
-            //Проверка
-            if (file != null && file.exists()) {
+//            //Качаем файл
+            try {
+                File file = UTIL.downloadFile(inputFile, outputDir);
+                if (file == null || !file.exists())
+                    throw new IOException("Unknown error while trying to download " + inputFile);
                 inputFile = file.getPath();
-            } else {
-                return printErrorResponseMessage("Error. Failed to download file " + inputFile);
+            } catch (IOException e) {
+                System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | " + e.getMessage());
+                return printErrorResponseMessage("Error. Failed to unpack file " + inputFile + " | " + e.getMessage());
             }
         }
 

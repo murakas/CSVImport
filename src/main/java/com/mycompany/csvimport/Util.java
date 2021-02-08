@@ -146,40 +146,38 @@ public class Util {
 //        }
 //        return outputFile;
 //    }
-    public File getFile(String fileURL, String saveDir) {
-        HttpURLConnection httpConn;
-//        String disposition = httpConn.getHeaderField("Content-Disposition");
-//        File outputFile = downloadFile(fileURL, saveDir, disposition, httpConn.getInputStream());
+    public File downloadFile(String fileURL, String saveDir) throws IOException {
+        URL url = new URL(fileURL);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.addRequestProperty("User-Agent", "Mozilla");
 
+        int status = -1; //по умолчанию ошибка
 
-        try {
-            URL url = new URL(fileURL);
-            httpConn = (HttpURLConnection) url.openConnection();
-            short status = -1;
-            int responseCode = httpConn.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                status = 0;
-            }
-            if (responseCode == HttpURLConnection.HTTP_MOVED_TEMP ||
-                    responseCode == HttpURLConnection.HTTP_MOVED_PERM ||
-                    responseCode == HttpURLConnection.HTTP_SEE_OTHER) {
-                status = 1;
-            }
+        int responseCode = conn.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_OK)
+            status = 0;
+        if (responseCode == HttpURLConnection.HTTP_MOVED_TEMP
+                || responseCode == HttpURLConnection.HTTP_MOVED_PERM
+                || responseCode == HttpURLConnection.HTTP_SEE_OTHER)
+            status = 1;
 
-            if(status = 1)
-
-            httpConn.disconnect();
-        } catch (IOException e) {
-            if (!isTerminal)
-                System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | Unknown error while trying to download a file: " + e.getMessage());
+        if (status == -1) {
+            System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | An error occurred while trying to download the file. Server returned HTTP code: " + responseCode);
+            return null;
         }
 
+        if (status == 1) {
+            //делаем редирект
+            String newUrl = conn.getHeaderField("Location");
+            String cookies = conn.getHeaderField("Set-Cookie");
 
-        return outputFile;
-    }
+            conn = (HttpURLConnection) new URL(newUrl).openConnection();
+            conn.setRequestProperty("Cookie", cookies);
+            conn.addRequestProperty("User-Agent", "Mozilla");
+        }
 
-    private File downloadFile(String fileURL, String saveDir, String disposition, InputStream inputStream) throws IOException {
         String fileName = null;
+        String disposition = conn.getHeaderField("Content-Disposition");
         if (disposition != null) {
             int index = disposition.indexOf("filename=") - 1;
             if (index > 0) {
@@ -196,6 +194,7 @@ public class Util {
             if (fileName.length() > 250) fileName = fileName.substring(250);
         }
 
+        InputStream inputStream = conn.getInputStream();
         String saveFilePath = saveDir + File.separator + fileName;
 
         ReadableByteChannel channel = Channels.newChannel(inputStream);
@@ -205,6 +204,7 @@ public class Util {
         outputStream.close();
         channel.close();
         inputStream.close();
+        conn.disconnect();
 
         return outputFile;
     }
