@@ -35,6 +35,7 @@ public class MainController {
     @Consumes(MediaType.APPLICATION_JSON)
     public String importCsv(String importJson) {
         long startTime = System.currentTimeMillis();
+
         JsonElement element = JsonParser.parseString(importJson);
 
         String inputFile = element.getAsJsonObject().get("inputFile").getAsString();
@@ -143,13 +144,7 @@ public class MainController {
     @Consumes(MediaType.APPLICATION_JSON)
     public String update(String updateJson) {
         long startTime = System.currentTimeMillis();
-        try {
-            URI uri = getClass().getResource("/update_csv.sql").toURI();
-            String content = new String(Files.readAllBytes(Paths.get(uri)));
-            System.out.println(content);
-        } catch (Exception e) {
-            System.err.println(e);
-        }
+
         JsonElement element = JsonParser.parseString(updateJson);
         JsonObject jsonObjConnTarget = element.getAsJsonObject().getAsJsonObject("dbTarget");
         JsonObject jsonObjConnSource = element.getAsJsonObject().getAsJsonObject("dbSource");
@@ -281,6 +276,11 @@ public class MainController {
         try {
             connTarget.setAutoCommit(false);
             try (Statement stmt = connTarget.createStatement()) {
+                //Выполнение скрипта
+                URI uri = getClass().getResource("/update_csv.sql").toURI();
+                String content = new String(Files.readAllBytes(Paths.get(uri)));
+                stmt.execute(content);
+
                 stmt.execute(sqlTgrInstallPostgres_fdw);
                 stmt.execute(sqlTgrCreateServer);
                 stmt.execute(sqlTgrCreateMapping);
