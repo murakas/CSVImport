@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.Date;
 
 
-public class MainTest {
+public class Test {
 
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 

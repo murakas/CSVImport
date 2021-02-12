@@ -27,13 +27,13 @@ public class MainController {
 
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Util UTIL = new Util(false);
+    private static final Util UTIL = new Util();
 
     @POST
     @Path("/import")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public String importCsv(String importJson) {
+    public String importCSV(String importJson) {
         long startTime = System.currentTimeMillis();
 
         JsonElement element = JsonParser.parseString(importJson);
@@ -277,9 +277,9 @@ public class MainController {
             connTarget.setAutoCommit(false);
             try (Statement stmt = connTarget.createStatement()) {
                 //Выполнение скрипта
-                URI uri = getClass().getResource("/update_csv.sql").toURI();
+                URI uri = getClass().getResource("/update.sql").toURI();
                 String content = new String(Files.readAllBytes(Paths.get(uri)));
-                stmt.execute(content);
+                //stmt.execute(content);
 
                 stmt.execute(sqlTgrInstallPostgres_fdw);
                 stmt.execute(sqlTgrCreateServer);

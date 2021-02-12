@@ -21,62 +21,8 @@ import java.util.regex.Pattern;
 public class Util {
 
     private final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    private Connection con;
-    private final boolean isTerminal;
+    private Connection connection;
 
-    public Util(boolean isTerminal) {
-        this.isTerminal = isTerminal;
-    }
-
-    //    public File getFile(String fileURL, String saveDir) {
-//        File outputFile = null;
-//        HttpURLConnection httpConn;
-//        try {
-//            URL url = new URL(fileURL);
-//            httpConn = (HttpURLConnection) url.openConnection();
-//            int responseCode = httpConn.getResponseCode();
-//            if (responseCode == HttpURLConnection.HTTP_OK) {
-//                String fileName = null;
-//                String disposition = httpConn.getHeaderField("Content-Disposition");
-//                if (disposition != null) {
-//                    int index = disposition.indexOf("filename=") - 1;
-//                    if (index > 0) {
-//                        fileName = disposition.substring(index + 10);
-//                    }
-//                } else {
-//                    fileName = fileURL.substring(fileURL.lastIndexOf("/") + 1);
-//                }
-//
-//                System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | Download file " + fileName);
-//
-//                if (fileName != null) {
-//                    fileName = fileName.replaceAll("([,\\\\:*?\"<>|+%!@#$^&=;])", "");
-//                    if (fileName.length() > 250) fileName = fileName.substring(250);
-//                }
-//
-//                InputStream inputStream = httpConn.getInputStream();
-//                String saveFilePath = saveDir + File.separator + fileName;
-//
-//                ReadableByteChannel channel = Channels.newChannel(inputStream);
-//                outputFile = new File(saveFilePath);
-//                FileOutputStream outputStream = new FileOutputStream(outputFile);
-//                outputStream.getChannel().transferFrom(channel, 0, Long.MAX_VALUE);
-//                outputStream.close();
-//                channel.close();
-//                inputStream.close();
-//                httpConn.disconnect();
-//
-//            } else {
-//                if (!isTerminal)
-//                    System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | An error occurred while trying to download the file. Server returned HTTP code: " + responseCode);
-//            }
-//            httpConn.disconnect();
-//        } catch (IOException e) {
-//            if (!isTerminal)
-//                System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | Unknown error while trying to download a file: " + e.getMessage());
-//        }
-//        return outputFile;
-//    }
     public File downloadFile(String fileURL, String saveDir) throws IOException {
         URL url = new URL(fileURL);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -196,8 +142,7 @@ public class Util {
         int total = 0;
         int error = 0;
         int normal = 0;
-        if (!isTerminal)
-            System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | Parse " + file.getPath());
+        System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | Parse " + file.getPath());
         //чтение
         CsvParserSettings readSettings = new CsvParserSettings();
         readSettings.getFormat().setLineSeparator("\n");
@@ -246,8 +191,8 @@ public class Util {
         boolean res = false;
         try {
             Class.forName("org.postgresql.Driver");
-            con = DriverManager.getConnection("jdbc:postgresql://" + connectionString, user, pass);
-            con.setAutoCommit(true);
+            connection = DriverManager.getConnection("jdbc:postgresql://" + connectionString, user, pass);
+            connection.setAutoCommit(true);
             res = true;
         } catch (SQLException | ClassNotFoundException e) {
             System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | Database connection error " + connectionString + " " + user + " " + pass);
@@ -258,8 +203,8 @@ public class Util {
     public long importToBase(File fileNewCSV, String outputDirInDocker, String tableName) {
         long size = -1L;
         try {
-            try (Statement stmt = con.createStatement()) {
-                URI uri = getClass().getResource("/import_csv.sql").toURI();
+            try (Statement stmt = connection.createStatement()) {
+                URI uri = getClass().getResource("/import.sql").toURI();
                 String createFunction = new String(Files.readAllBytes(Paths.get(uri)));
                 stmt.execute(createFunction);
 
@@ -271,7 +216,7 @@ public class Util {
                 }
                 rs.close();
             }
-            con.close();
+            connection.close();
         } catch (Exception e) {
             System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | Import error " + fileNewCSV.getPath() + ": " + e.getLocalizedMessage());
         }

@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.mycompany.csvimport</groupId>
     <artifactId>CSVimport</artifactId>
-    <version>1.5</version>
+    <version>1.6</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -25,7 +25,7 @@
         <dependency>
             <groupId>com.univocity</groupId>
             <artifactId>univocity-parsers</artifactId>
-            <version>2.9.0</version>
+            <version>2.9.1</version>
         </dependency>
 
         <dependency>
@@ -43,25 +43,25 @@
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-jetty-http</artifactId>
-            <version>2.32</version>
+            <version>2.33</version>
         </dependency>
 
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-util</artifactId>
-            <version>9.4.32.v20200930</version>
+            <version>9.4.36.v20210114</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-server</artifactId>
-            <version>2.32</version>
+            <version>2.33</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-servlet-core</artifactId>
-            <version>2.32</version>
+            <version>2.33</version>
         </dependency>
 
         <dependency>
@@ -73,13 +73,13 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
-            <version>9.4.32.v20200930</version>
+            <version>9.4.36.v20210114</version>
         </dependency>
 
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
-            <version>9.4.32.v20200930</version>
+            <version>9.4.36.v20210114</version>
         </dependency>
 
     </dependencies>
@@ -107,7 +107,8 @@
             <resource>
                 <directory>src/main/resources</directory>
                 <includes>
-                    <include>update_csv.sql</include>
+                    <include>update.sql</include>
+                    <include>import.sql</include>
                 </includes>
             </resource>
         </resources>
