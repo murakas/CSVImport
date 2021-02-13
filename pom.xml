@@ -84,9 +84,19 @@
 
     </dependencies>
 
+
     <build>
         <finalName>JerseyJettyEx</finalName>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.6.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -102,13 +112,27 @@
                     <mainClass>com.mycompany.csvimport.Service</mainClass>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>callbackservice.Main</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+            </plugin>
+
         </plugins>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
                 <includes>
-                    <include>update.sql</include>
                     <include>import.sql</include>
+                    <include>update.sql</include>
                 </includes>
             </resource>
         </resources>

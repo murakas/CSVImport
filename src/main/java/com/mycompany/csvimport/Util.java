@@ -11,12 +11,14 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.*;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class Util {
 
@@ -204,9 +206,11 @@ public class Util {
         long size = -1L;
         try {
             try (Statement stmt = connection.createStatement()) {
-                URI uri = getClass().getResource("/import.sql").toURI();
-                String createFunction = new String(Files.readAllBytes(Paths.get(uri)));
-                stmt.execute(createFunction);
+                InputStream is = MainController.class.getClassLoader().getResourceAsStream("import.sql");
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+                String content = bufferedReader.lines().collect(Collectors.joining("\n"));
+
+                stmt.execute(content);
 
                 String sql = "select * from public.import_csv('" + outputDirInDocker + "/" + fileNewCSV.getName() + "', '" + tableName + "');";
                 stmt.execute(sql);

@@ -1,15 +1,15 @@
-package com.mycompany.csvimport.controller;
+package com.mycompany.csvimport;
 
 import com.google.gson.*;
-import com.mycompany.csvimport.Util;
 import com.mycompany.csvimport.model.DataBaseSettings;
 import com.mycompany.csvimport.model.response.Response;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 @Path("/")
@@ -178,7 +179,7 @@ public class MainController {
          ***** ФОРМИРУЕМ ЗАПРОСЫ delete, insert, update *****
          */
         JsonObject obj = element.getAsJsonObject().getAsJsonObject("columns");
-        Set<Map.Entry<String, JsonElement>> entries = obj.entrySet();
+        Set<Map.Entry<String, JsonElement>> columnsList = obj.entrySet();
 
         LinkedHashMap<String, String> insertColumns = new LinkedHashMap<>();
         LinkedHashMap<String, String> updateColumns = new LinkedHashMap<>();
@@ -186,13 +187,13 @@ public class MainController {
 
         int c = 1;
         //список полей
-        for (Map.Entry<String, JsonElement> entry : entries) {
+        for (Map.Entry<String, JsonElement> column : columnsList) {
 
-            boolean isUpdate = entry.getValue().getAsJsonObject().get("update").getAsBoolean();
-            boolean isComparisonField = entry.getValue().getAsJsonObject().get("comparisonField").getAsBoolean();
+            boolean isUpdate = column.getValue().getAsJsonObject().get("update").getAsBoolean();
+            boolean isComparisonField = column.getValue().getAsJsonObject().get("comparisonField").getAsBoolean();
 
             //поля которые нужно обновить
-            JsonElement columnsSource = entry.getValue().getAsJsonObject().get("columnsSource");
+            JsonElement columnsSource = column.getValue().getAsJsonObject().get("columnsSource");
             if (!columnsSource.isJsonNull()) {
                 JsonArray arrayColumnsSource = columnsSource.getAsJsonArray();
                 String[] columnStrings = new String[arrayColumnsSource.size()];
@@ -204,22 +205,29 @@ public class MainController {
                     joinedInsert = "concat_ws(',', " + String.join(",", columnStrings) + ") as c" + c;
                 } else {
                     String distinct = "";
-                    if (entry.getKey().equals("unical_id"))
+                    if (column.getKey().equals("unical_id"))
                         distinct = "distinct on (" + String.join(",", columnStrings) + ") ";
 
-                    joinedInsert = distinct + "(" + String.join(",", columnStrings) + ") as c" + c;
+                    if (column.getKey().equals("price") || column.getKey().equals("price_old") || column.getKey().equals("delivery_price")) {
+                        String col = String.join(",", columnStrings);
+                        joinedInsert = String.format("(case when (%s is not null and %s != '') then %s::numeric else 0 end) as c" + c,
+                                col,
+                                col,
+                                col);
+                    } else
+                        joinedInsert = distinct + "(" + String.join(",", columnStrings) + ") as c" + c;
                 }
-                insertColumns.put(entry.getKey(), joinedInsert); //поля
+                insertColumns.put(column.getKey(), joinedInsert); //поля
 
                 if (isUpdate) {
-                    updateColumns.put(entry.getKey(), "excluded." + entry.getKey()); //поля
+                    updateColumns.put(column.getKey(), "excluded." + column.getKey()); //поля
                 }
                 c++;
             }
 
             //сравниваемые поля
-            if (isComparisonField && !entry.getValue().getAsJsonObject().get("columnsSource").isJsonNull()) {
-                compareColumns.put(entry.getKey(), entry.getValue().getAsJsonObject().get("columnsSource").getAsString());
+            if (isComparisonField && !column.getValue().getAsJsonObject().get("columnsSource").isJsonNull()) {
+                compareColumns.put(column.getKey(), column.getValue().getAsJsonObject().get("columnsSource").getAsString());
             }
         }
 
@@ -277,9 +285,12 @@ public class MainController {
             connTarget.setAutoCommit(false);
             try (Statement stmt = connTarget.createStatement()) {
                 //Выполнение скрипта
-                URI uri = getClass().getResource("/update.sql").toURI();
-                String content = new String(Files.readAllBytes(Paths.get(uri)));
-                //stmt.execute(content);
+                InputStream is = MainController.class.getClassLoader().getResourceAsStream("update.sql");
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+                String content = bufferedReader.lines().collect(Collectors.joining("\n"));
+
+                System.out.println("Выполняем скрипт update.sql");
+                stmt.execute(content);
 
                 stmt.execute(sqlTgrInstallPostgres_fdw);
                 stmt.execute(sqlTgrCreateServer);
@@ -295,7 +306,7 @@ public class MainController {
             connTarget.close();
 
         } catch (Exception e) {
-            return printErrorResponseMessage("Error. Failed update: " + e);
+            return printErrorResponseMessage("Error. Failed update: " + e.getMessage());
         }
 
 //        try {
