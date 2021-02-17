@@ -2,11 +2,11 @@ CREATE OR REPLACE FUNCTION public.import_csv(csv_file text, target_table text)
  RETURNS character varying
  LANGUAGE plpgsql
 AS $function$
-DECLARE
-	column_ text;
-	cmd VARCHAR ;
-	array_columns text[];
-	delimiter_ text;
+declare
+	column_ varchar;
+	cmd varchar ;
+	array_columns varchar[];
+	delimiter_ varchar;
 	table_size varchar;
 	--StartTime timestamptz;
   	--EndTime timestamptz;
@@ -40,7 +40,7 @@ begin
 	--Создадим поля в таблице на основании массива
 	FOREACH column_ IN ARRAY array_columns
 	loop
-		column_ = column_ || '_column';
+		column_ = lower(column_);
 		execute format('alter table temp_table add column %s text;', replace(column_,':','_'));
 	END LOOP;
 

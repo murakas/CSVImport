@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.mycompany.csvimport</groupId>
     <artifactId>CSVimport</artifactId>
-    <version>1.6</version>
+    <version>1.8</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -86,7 +86,7 @@
 
 
     <build>
-        <finalName>JerseyJettyEx</finalName>
+        <finalName>CSVImport_1.8</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

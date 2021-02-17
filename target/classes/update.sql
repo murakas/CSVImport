@@ -1,9 +1,6 @@
 DO $$
 BEGIN
 
---Установка расшиения
-create extension if not exists postgres_fdw;
-
 --Создание триггерной функции
 if not exists(
     select
@@ -131,8 +128,8 @@ CREATE TABLE if not exists public.products (
 	seo_description text NULL,
 	brand_name text NULL,
 	brand_id text NULL,
-	price numeric(15,2) NULL,
-	price_old numeric(15,2) NULL,
+	price float NULL,
+	price_old float NULL,
 	category text NULL,
 	category_id text NULL,
 	category_path text NULL,
@@ -141,7 +138,7 @@ CREATE TABLE if not exists public.products (
 	shop_category_id text NULL,
 	shop_category_path text NULL,
 	delivery_time text NULL,
-	delivery_price numeric(15,2) NULL,
+	delivery_price float NULL,
 	propertie_style text NULL,
 	propertie_color text NULL,
 	propertie_material text NULL,

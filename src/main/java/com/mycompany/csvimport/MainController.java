@@ -7,11 +7,7 @@ import com.mycompany.csvimport.model.response.Response;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.*;
-import java.net.URI;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
@@ -98,7 +94,7 @@ public class MainController {
 
             if (fileCSVNew.exists()) {
                 inputFile = fileCSVNew.getPath();
-                fileCSV.deleteOnExit();
+                fileCSV.delete();
             } else {
                 return printErrorResponseMessage("Error. Failed to parse file " + inputFile);
             }
@@ -109,7 +105,7 @@ public class MainController {
         //Импорируем
         File fileCSVImport = new File(inputFile);
         long size = UTIL.importToBase(fileCSVImport, outputDirInDocker, tableName);
-        fileCSVImport.deleteOnExit();
+        fileCSVImport.delete();
         if (size < 0) return printErrorResponseMessage("Error. Failed to import file " + inputFile);
 
         //Если все норм то выводим результат
@@ -210,10 +206,10 @@ public class MainController {
 
                     if (column.getKey().equals("price") || column.getKey().equals("price_old") || column.getKey().equals("delivery_price")) {
                         String col = String.join(",", columnStrings);
-                        joinedInsert = String.format("(case when (%s is not null and %s != '') then %s::numeric else 0 end) as c" + c,
-                                col,
-                                col,
-                                col);
+                        joinedInsert = String.format("(case when (%s !='' and %s is not null) then round(%s::numeric, 2) else -1 end) as c" + c,
+                                "substring(" + col + " from '\\d+\\.?\\d*')",
+                                "substring(" + col + " from '\\d+\\.?\\d*')",
+                                "substring(" + col + " from '\\d+\\.?\\d*')");
                     } else
                         joinedInsert = distinct + "(" + String.join(",", columnStrings) + ") as c" + c;
                 }

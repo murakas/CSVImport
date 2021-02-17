@@ -24,3 +24,13 @@ docker run -ti -d --name pg_docker -e POSTGRES_PASSWORD=168 -p 2345:5432 -v /hom
 		String user					- пользователь
 		String pass 				- пароль
 		String tableName			- название таблицы в базе
+
+{
+  "inputFile": "/home/murat/datafeed_399251.csv.gz",
+  "outputDir": "/home/murat",
+  "outputDirInDocker": "/home/murat",
+  "connectionString": "95.111.236.242:5432/murad",
+  "user": "murat",
+  "pass": "Murat2021#",
+  "tableName": "test1"
+}

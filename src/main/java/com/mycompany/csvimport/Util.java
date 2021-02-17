@@ -7,16 +7,14 @@ import com.univocity.parsers.csv.CsvWriterSettings;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.*;
 import java.util.Date;
 import java.text.SimpleDateFormat;
+import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -98,7 +96,7 @@ public class Util {
             //Распаковка
             File tmpFile = new File(path);
             path = extractCore(tmpFile, outputDir);
-            tmpFile.deleteOnExit();
+            tmpFile.delete();
             count++;
         }
 
@@ -231,7 +229,11 @@ public class Util {
         Connection connection = null;
         try {
             Class.forName("org.postgresql.Driver");
-            connection = DriverManager.getConnection("jdbc:postgresql://" + connectionString, user, pass);
+            Properties properties = new Properties();
+            properties.setProperty("user", user);
+            properties.setProperty("password", pass);
+            properties.setProperty("cancelSignalTimeout","43200");
+            connection = DriverManager.getConnection("jdbc:postgresql://" + connectionString, properties);
             connection.setAutoCommit(true);
         } catch (SQLException | ClassNotFoundException e) {
             System.out.println("LOG: " + DATE_FORMAT.format(new Date().getTime()) + " | Database connection error " + connectionString + " " + user + " " + pass);
