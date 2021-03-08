@@ -82,6 +82,12 @@
             <version>9.4.36.v20210114</version>
         </dependency>
 
+        <dependency>
+            <groupId>net.coobird</groupId>
+            <artifactId>thumbnailator</artifactId>
+            <version>0.4.13</version>
+        </dependency>
+
     </dependencies>
 
 

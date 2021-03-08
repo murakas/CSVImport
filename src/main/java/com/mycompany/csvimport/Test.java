@@ -1,25 +1,29 @@
 package com.mycompany.csvimport;
 
-import com.google.gson.*;
-import com.mycompany.csvimport.model.DataBaseSettings;
+import net.coobird.thumbnailator.Thumbnails;
 
 import java.io.*;
 
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.*;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.util.*;
 import java.util.Date;
-import java.util.stream.Collectors;
 
 
 public class Test {
 
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_BLACK = "\u001B[30m";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_YELLOW = "\u001B[33m";
+    public static final String ANSI_BLUE = "\u001B[34m";
+    public static final String ANSI_PURPLE = "\u001B[35m";
+    public static final String ANSI_CYAN = "\u001B[36m";
+    public static final String ANSI_WHITE = "\u001B[37m";
 
 
 //    public static void main(String[] args) {
@@ -292,13 +296,35 @@ public class Test {
 //        }
 //    }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
+
+        String sql1 = "SELECT id, unical_id, (string_to_array(images, ','))[1] FROM products  WHERE images is not null and images != '' order by unical_id limit 10000";
+        String sql2 = "SELECT id, unical_id, (string_to_array(images, ','))[1] FROM products  WHERE images is not null and images != '' order by unical_id limit 10000 offset 10000";
+
+        Thread thread1 = new Thread(() -> {
+            try {
+                extract(sql1, false);
+            } catch (SQLException tr) {
+                System.err.println("Поток 1: " + tr.getMessage());
+            }
+        });
+
+        Thread thread2 = new Thread(() -> {
+            try {
+                extract(sql2, true);
+            } catch (SQLException tr) {
+                System.err.println("Поток 2: " + tr.getMessage());
+            }
+        });
+
+        thread1.start();
+        thread2.start();
 
 
-        InputStream is = Test.class.getClassLoader().getResourceAsStream("update.sql");
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
-        String text = bufferedReader.lines().collect(Collectors.joining());
-        System.out.println(text);
+//        InputStream is = Test.class.getClassLoader().getResourceAsStream("update.sql");
+//        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
+//        String text = bufferedReader.lines().collect(Collectors.joining());
+//        System.out.println(text);
 
 //        String url = "https://www.webgains.com/datafeed.html?action=download&campaign=1306705&feeds=15205,14735,6275,21485,451,6333,7603,1608,13265,6973,20725,20085,2839,14505,14495,21245,7469,19135,19075,16935,17625,7343,5243,4043,2135,8033,6507,7341,4267,7311,4299,8199,19385,6691,1682,6831,19355,15955,6443,8221,2995,1652,9465,19745,21675,6643,3467,1880,19765,397,7101,2562,2929,20455,7651,21185,7255,8167,13245,10765,1315,4211,6615,7941,618,6057,9325,20615,9055,7365&categories=1013,1127,1128,8532,8534,8531,8176,5714,8530,1130,5715,21601,5716,1129,1131,1141,1198,1199,20314,20313,2311,1200,1201,5814,1154,1155,1156,1159,1165,1166,1167,1168,1169,1172,1171,7720,1170,1173,5752,5753,1174,1175,1177,1178,1179,5811,16382,1184,8576,8256,7722,9607,1142,1151,1145,1147,1153,5751,19885,1202,1203,1207,1261,1262,1264,5981,9474,5984,5983,8302,1265,9476,1266,8614,1275,19887,1208,1209,5824,5825,1218,1215,1211,16804,1214,1219,5836,5839,5841,20330,1221,1502,9455,1504,1222,5968,1228,1237,5908,8755,1235,1236,5906,1233,1234,1257,1258,1260,8396,8395,1245,1253,5972,5974,1247,8372,9457,1248,8379,8381,8382,8377,8380,8378,9467,1249,9468,5966,8390,9470,5964,9469,8384,5967,5903,1255,1251,1239,1240,1241,1242,1285,1288,1290,1286,1217,1289,1287,5997,9478,5999,9477,5996,5993,1291,8356,1292,1293,1294,1297,1298,1296,1299,1310,1311,1312,1313,1326,1328,1329,1330,6213,1331,1336,1332,1333,1334,8263,1337,1338,1339,6256,1342,1343,1345,1347,1353,1354,1361,1364,1370,1372,1369,1382,1384,1386,1388,1392,1395,1402,1403,1406,1405,16650,8397,9554,6302,1404,1407,1408,1409,1410,1412,12969,1413,6305,6303,1414,1028,1034,5630,9605,9649,5626,1069,1070,5689,5690,1467,1471,1481,5622,5623,1029,1031,1032,1033,1035,1036,5642,1041,1042,1037,1043,1038,1045,1046,5649,5657,1047,1082,1053,1055,1054,17152,1056,1073,1074,1122,1083,1084,1057,1061,1059,1063,5683,5680,1060,1062,5679,1119,1086,1093,1087,1088,1089,1090,1091,1097,1100,1101,1111,5709,5691,1132,1133,7838,15673,16413,19873,19872,1140,5741,8177,8558,8556,8557,8710,1135,5730,5615,8572,20298,20307,1139,20312,1459,6312,6319,1461,1466,20318,20317,1014,1020,8255,1018,5619,1019,1022,1023,1024,16726,1025,1026,1027,1021,1468,1469,1470,1473,1475,1480,1482,1210,8943,450,452,455,15674,20327,453,20328,1465,462,463,1484,6326,8358,1486,1494,1495,9479,1497,9480,1498,19902,1499,1500,1501,1503,1505,6354,8842,20319,1506,1507,20320,1508,1509,1510,1511,19877,19875,19878,6336,1516,1513,6338,6339,6340,19884,8365,1512,1519,6341,1520,1521,1522,1523,1525,1528,6353,8270,1527,7725,1529,1524,1532,20326,1300,1301,1304,1308,1541,1547&fields=extended&fieldIds=description,image_url,deeplink,category_id,merchant_category,category_name,category_path,price,product_id,product_name,program_id,program_name,last_updated,expiry,age,promotion_details,display_price,Delivery_type,manufacturers_product_number,in_stock,best_sellers,payment_methods,image_large_url,image_thumbnail_url,unit,recommended_retail_price,european_article_number,Colour,used_price,gender,flavour,weight,base_price,size,voucher_code,voucher_discount,manufacturer,related_product_ids,ISBN,image_url,keywords,short_description,stock_level,stock_level_date,country,delivery_period,brand,Fabric,merchant_category_id,metal,normal_price,voucher_price,seals,embargo,language,stock_code,barcode,type,upc,delivery_cost,ship_to,additionalproductdetails_1,additionalproductdetails_2,additionalproductdetails_3,currency,destination,condition,additional_delivery_cost_1,additional_delivery_cost_2,additional_delivery_cost_3,additionalproductdetails,additional_delivery_period_1,additional_image_2,additional_image_3,additional_thumb_2,additional_thumb_3&format=csv&separator=comma&zipformat=none&stripNewlines=0&apikey=655b1a19c4b763234d376037f86d0349";
 //        String url2 = "http://content.webgains.com/affiliates/datafeed.html?action=download&campaign=1306705&feeds=15205,14735,6275,21485,451,6333,7603,1608,13265,6973,20725,20085,2839,14505,14495,21245,7469,19135,19075,16935,17625,7343,5243,4043,2135,8033,6507,7341,4267,7311,4299,8199,19385,6691,1682,6831,19355,15955,6443,8221,2995,1652,9465,19745,21675,6643,3467,1880,19765,397,7101,2562,2929,20455,7651,21185,7255,8167,13245,10765,1315,4211,6615,7941,618,6057,9325,20615,9055,7365&categories=1013,1127,1128,8532,8534,8531,8176,5714,8530,1130,5715,21601,5716,1129,1131,1141,1198,1199,20314,20313,2311,1200,1201,5814,1154,1155,1156,1159,1165,1166,1167,1168,1169,1172,1171,7720,1170,1173,5752,5753,1174,1175,1177,1178,1179,5811,16382,1184,8576,8256,7722,9607,1142,1151,1145,1147,1153,5751,19885,1202,1203,1207,1261,1262,1264,5981,9474,5984,5983,8302,1265,9476,1266,8614,1275,19887,1208,1209,5824,5825,1218,1215,1211,16804,1214,1219,5836,5839,5841,20330,1221,1502,9455,1504,1222,5968,1228,1237,5908,8755,1235,1236,5906,1233,1234,1257,1258,1260,8396,8395,1245,1253,5972,5974,1247,8372,9457,1248,8379,8381,8382,8377,8380,8378,9467,1249,9468,5966,8390,9470,5964,9469,8384,5967,5903,1255,1251,1239,1240,1241,1242,1285,1288,1290,1286,1217,1289,1287,5997,9478,5999,9477,5996,5993,1291,8356,1292,1293,1294,1297,1298,1296,1299,1310,1311,1312,1313,1326,1328,1329,1330,6213,1331,1336,1332,1333,1334,8263,1337,1338,1339,6256,1342,1343,1345,1347,1353,1354,1361,1364,1370,1372,1369,1382,1384,1386,1388,1392,1395,1402,1403,1406,1405,16650,8397,9554,6302,1404,1407,1408,1409,1410,1412,12969,1413,6305,6303,1414,1028,1034,5630,9605,9649,5626,1069,1070,5689,5690,1467,1471,1481,5622,5623,1029,1031,1032,1033,1035,1036,5642,1041,1042,1037,1043,1038,1045,1046,5649,5657,1047,1082,1053,1055,1054,17152,1056,1073,1074,1122,1083,1084,1057,1061,1059,1063,5683,5680,1060,1062,5679,1119,1086,1093,1087,1088,1089,1090,1091,1097,1100,1101,1111,5709,5691,1132,1133,7838,15673,16413,19873,19872,1140,5741,8177,8558,8556,8557,8710,1135,5730,5615,8572,20298,20307,1139,20312,1459,6312,6319,1461,1466,20318,20317,1014,1020,8255,1018,5619,1019,1022,1023,1024,16726,1025,1026,1027,1021,1468,1469,1470,1473,1475,1480,1482,1210,8943,450,452,455,15674,20327,453,20328,1465,462,463,1484,6326,8358,1486,1494,1495,9479,1497,9480,1498,19902,1499,1500,1501,1503,1505,6354,8842,20319,1506,1507,20320,1508,1509,1510,1511,19877,19875,19878,6336,1516,1513,6338,6339,6340,19884,8365,1512,1519,6341,1520,1521,1522,1523,1525,1528,6353,8270,1527,7725,1529,1524,1532,20326,1300,1301,1304,1308,1541,1547&fields=extended&fieldIds=description,image_url,deeplink,category_id,merchant_category,category_name,category_path,price,product_id,product_name,program_id,program_name,last_updated,expiry,age,promotion_details,display_price,Delivery_type,manufacturers_product_number,in_stock,best_sellers,payment_methods,image_large_url,image_thumbnail_url,unit,recommended_retail_price,european_article_number,Colour,used_price,gender,flavour,weight,base_price,size,voucher_code,voucher_discount,manufacturer,related_product_ids,ISBN,image_url,keywords,short_description,stock_level,stock_level_date,country,delivery_period,brand,Fabric,merchant_category_id,metal,normal_price,voucher_price,seals,embargo,language,stock_code,barcode,type,upc,delivery_cost,ship_to,additionalproductdetails_1,additionalproductdetails_2,additionalproductdetails_3,currency,destination,condition,additional_delivery_cost_1,additional_delivery_cost_2,additional_delivery_cost_3,additionalproductdetails,additional_delivery_period_1,additional_image_2,additional_image_3,additional_thumb_2,additional_thumb_3&format=csv&separator=comma&zipformat=none&stripNewlines=0&apikey=655b1a19c4b763234d376037f86d0349";
@@ -371,6 +397,49 @@ public class Test {
 //            e.printStackTrace();
 //        }
 
+    }
+
+    private static void extract(String sql1, boolean f) throws SQLException {
+        Util u = new Util();
+        Connection connection = u.createConnection("95.111.236.242:5432/murad", "murat", "Murat2021#");
+        Statement st = connection.createStatement();
+        st.setFetchSize(250);
+        ResultSet rs = st.executeQuery(sql1);
+        int a = 0;
+        int b = 0;
+        int c = f ? 10000 : 0;
+        long startTime = System.currentTimeMillis();
+        while (rs.next()) {
+            long startTimeOne = System.currentTimeMillis();
+            String fileImage = rs.getString(1) + "_" + rs.getString(2) + ".jpg";
+            String imageUrl = rs.getString(3);
+            String color = "";
+//            BufferedImage bufferedImage = ImageIO.read(new URI(imageUrl).toURL());
+//            bufferedImage.getHeight();
+            try {
+                Thumbnails.of(new URI(imageUrl).toURL())
+                        .size(360, 360).keepAspectRatio(true)
+                        .outputQuality(0.8)
+                        .toFile("C:/Users/muka/Desktop/tmp/" + fileImage);
+                color = ANSI_GREEN;
+                b++;
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+                color = ANSI_RED;
+                a++;
+            } finally {
+                long endTimeOne = System.currentTimeMillis();
+                long durationOne = (endTimeOne - startTimeOne);
+                System.out.println(color + c++ + " " + imageUrl + " " + durationOne + " ms" + " / " + durationOne / 1000 % 60 + " s" + ANSI_RESET);
+            }
+        }
+        long endTime = System.currentTimeMillis();
+        long duration = (endTime - startTime);
+        String time = String.format("%02d:%02d:%02d", duration / 1000 / 3600, duration / 1000 / 60 % 60, duration / 1000 % 60);
+        System.out.println("Всего затрачено: " + time + " пропущено " + a + " сконвертированно " + b);
+        rs.close();
+        st.close();
+        connection.close();
     }
 
     public static File getFile(String fileURL, String saveDir) throws IOException {
