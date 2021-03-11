@@ -2,11 +2,15 @@ package com.mycompany.csvimport;
 
 import net.coobird.thumbnailator.Thumbnails;
 
+import javax.net.ssl.*;
 import java.io.*;
 
 import java.net.*;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -24,6 +28,10 @@ public class Test {
     public static final String ANSI_PURPLE = "\u001B[35m";
     public static final String ANSI_CYAN = "\u001B[36m";
     public static final String ANSI_WHITE = "\u001B[37m";
+
+    static {
+        disableSslVerification();
+    }
 
 
 //    public static void main(String[] args) {
@@ -296,14 +304,14 @@ public class Test {
 //        }
 //    }
 
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args) {
 
         String sql1 = "SELECT id, unical_id, (string_to_array(images, ','))[1] FROM products  WHERE images is not null and images != '' order by unical_id limit 10000";
         String sql2 = "SELECT id, unical_id, (string_to_array(images, ','))[1] FROM products  WHERE images is not null and images != '' order by unical_id limit 10000 offset 10000";
 
         Thread thread1 = new Thread(() -> {
             try {
-                extract(sql1, false);
+                extract(sql1, "Поток 1");
             } catch (SQLException tr) {
                 System.err.println("Поток 1: " + tr.getMessage());
             }
@@ -311,7 +319,7 @@ public class Test {
 
         Thread thread2 = new Thread(() -> {
             try {
-                extract(sql2, true);
+                extract(sql2, "Поток 2");
             } catch (SQLException tr) {
                 System.err.println("Поток 2: " + tr.getMessage());
             }
@@ -399,7 +407,7 @@ public class Test {
 
     }
 
-    private static void extract(String sql1, boolean f) throws SQLException {
+    private static void extract(String sql1, String threadName) throws SQLException {
         Util u = new Util();
         Connection connection = u.createConnection("95.111.236.242:5432/murad", "murat", "Murat2021#");
         Statement st = connection.createStatement();
@@ -407,36 +415,44 @@ public class Test {
         ResultSet rs = st.executeQuery(sql1);
         int a = 0;
         int b = 0;
-        int c = f ? 10000 : 0;
+        int c = 0;
         long startTime = System.currentTimeMillis();
         while (rs.next()) {
             long startTimeOne = System.currentTimeMillis();
             String fileImage = rs.getString(1) + "_" + rs.getString(2) + ".jpg";
             String imageUrl = rs.getString(3);
             String color = "";
-//            BufferedImage bufferedImage = ImageIO.read(new URI(imageUrl).toURL());
-//            bufferedImage.getHeight();
+
             try {
-                Thumbnails.of(new URI(imageUrl).toURL())
-                        .size(360, 360).keepAspectRatio(true)
-                        .outputQuality(0.8)
-                        .toFile("C:/Users/muka/Desktop/tmp/" + fileImage);
+                URL url = new URL(imageUrl);
+                URLConnection urlConnection = url.openConnection();
+                urlConnection.setConnectTimeout(1000);
+                urlConnection.setReadTimeout(10000);
+                urlConnection.addRequestProperty("User-Agent", "Mozilla");
+
+                try (InputStream inputStream = urlConnection.getInputStream()) {
+                    Thumbnails.of(inputStream)
+                            .size(360, 360).keepAspectRatio(true)
+                            .outputQuality(0.8)
+                            .toFile("C:/Users/Murad/Desktop/tmp/" + fileImage);
+                }
+
                 color = ANSI_GREEN;
                 b++;
             } catch (Exception e) {
-                System.err.println(e.getMessage());
+                System.err.println(threadName + " : " + e.getMessage());
                 color = ANSI_RED;
                 a++;
             } finally {
                 long endTimeOne = System.currentTimeMillis();
                 long durationOne = (endTimeOne - startTimeOne);
-                System.out.println(color + c++ + " " + imageUrl + " " + durationOne + " ms" + " / " + durationOne / 1000 % 60 + " s" + ANSI_RESET);
+                System.out.println(threadName + " : " + color + c++ + " " + imageUrl + " " + durationOne + " ms" + " / " + durationOne / 1000 % 60 + " s" + ANSI_RESET);
             }
         }
         long endTime = System.currentTimeMillis();
         long duration = (endTime - startTime);
         String time = String.format("%02d:%02d:%02d", duration / 1000 / 3600, duration / 1000 / 60 % 60, duration / 1000 % 60);
-        System.out.println("Всего затрачено: " + time + " пропущено " + a + " сконвертированно " + b);
+        System.out.println(threadName + " : " + "Всего затрачено: " + time + " пропущено " + a + " сконвертированно " + b);
         rs.close();
         st.close();
         connection.close();
@@ -508,5 +524,42 @@ public class Test {
         conn.disconnect();
 
         return outputFile;
+    }
+
+    private static void disableSslVerification() {
+        try {
+            // Create a trust manager that does not validate certificate chains
+            TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+
+                public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                }
+
+                public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                }
+            }
+            };
+
+            // Install the all-trusting trust manager
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+            // Create all-trusting host name verifier
+            HostnameVerifier allHostsValid = new HostnameVerifier() {
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            };
+
+            // Install the all-trusting host verifier
+            HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
+        }
     }
 }

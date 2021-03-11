@@ -92,7 +92,7 @@ then
 
       	new.images = array_to_string(arr_images_result, ',');
 
-    	if ((new.images is null) or (new.images = '')) or ((new.price is null) or (new.price = 0)) then
+    	if ((new.images is null) or (new.images = '')) or ((new.price is null) or (new.price = 0) or (new.price > 10000)) then
     		RETURN null;
     	else
     		RETURN new;
