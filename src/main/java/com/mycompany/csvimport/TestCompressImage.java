@@ -10,10 +10,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,25 +33,24 @@ public class TestCompressImage {
     public static final String ANSI_CYAN = "\u001B[36m";
     public static final String ANSI_WHITE = "\u001B[37m";
     private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
-
+    private static final Util UTIL = new Util();
 
     public static void main(String[] args) {
-        Util util = new Util();
-        long n = 0;
+        long n = 15000;
         int threadsCount = 20;
 
-        try {
-            Connection connection = util.createConnection("95.111.236.242:5432/murad", "murat", "Murat2021#");
-            Statement st = connection.createStatement();
-            st.setFetchSize(250);
-            ResultSet rs = st.executeQuery("select count(id) from products");
-            while (rs.next()) {
-                n = rs.getLong(1);
-            }
-        } catch (Exception e) {
-            System.err.println(e);
-            System.exit(1);
-        }
+//        try {
+//            Connection connection = UTIL.createConnection("95.111.236.242/murad", "murat", "Murat2021#");
+//            Statement st = connection.createStatement();
+//            st.setFetchSize(250);
+//            ResultSet rs = st.executeQuery("select count(id) from products");
+//            while (rs.next()) {
+//                n = rs.getLong(1);
+//            }
+//        } catch (Exception e) {
+//            System.err.println(e);
+//            System.exit(1);
+//        }
 
         Map<Integer, String> sqlMap = new HashMap<>();
 
@@ -68,20 +64,21 @@ public class TestCompressImage {
 
                 String limit = "limit " + div + " offset " + offset;
                 sqlMap.put(i,
-                        "SELECT id, unical_id, (string_to_array(images, ','))[1] FROM products  WHERE images is not null and images != '' order by unical_id " + limit);
+                        "SELECT id, unical_id, (string_to_array(images, ',')) FROM products  WHERE images is not null and images != '' order by unical_id " + limit);
+//                sqlMap.put(i,
+//                        "SELECT id, unical_id, (string_to_array(images, ',')) FROM products  WHERE images is not null and images != '' and array_length(string_to_array(images, ','), 1) > 2 order by unical_id " + limit);
                 System.out.println(sqlMap.get(i));
-
             }
         }
 
-//
-//        String sql1 = "SELECT id, unical_id, (string_to_array(images, ','))[1] FROM products  WHERE images is not null and images != '' order by unical_id limit 500";
-//        String sql2 = "SELECT id, unical_id, (string_to_array(images, ','))[1] FROM products  WHERE images is not null and images != '' order by unical_id limit 500 offset 500";
         ExecutorService executor = Executors.newFixedThreadPool(threadsCount);
         for (Map.Entry<Integer, String> sql : sqlMap.entrySet()) {
             executor.execute(() -> {
                 try {
-                    extract(sql.getValue(), "Поток " + sql.getKey() + ": ");
+                    OkHttpClient.Builder builder = new OkHttpClient.Builder();
+                    builder = configureToIgnoreCertificate(builder);
+                    OkHttpClient client = builder.connectTimeout(10, TimeUnit.SECONDS).readTimeout(10, TimeUnit.SECONDS).build();
+                    extract(sql.getValue(), "Поток " + sql.getKey() + ": ", client);
                 } catch (SQLException tr) {
                     System.err.println("Поток " + sql.getKey() + ": " + tr.getMessage());
                 }
@@ -90,61 +87,76 @@ public class TestCompressImage {
         executor.shutdown();
     }
 
-    private static void extract(String sql1, String threadName) throws SQLException {
+    private static void extract(String sql, String threadName, OkHttpClient client) throws SQLException {
+        int bad = 0;
+        int success = 0;
+        int total = 0;
 
-        OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        builder = configureToIgnoreCertificate(builder);
-        final OkHttpClient client = builder.connectTimeout(10, TimeUnit.SECONDS).readTimeout(10, TimeUnit.SECONDS).build();
-
-        Util u = new Util();
-        Connection connection = u.createConnection("95.111.236.242:5432/murad", "murat", "Murat2021#");
+        long startTime = System.currentTimeMillis();
+        Connection connection = UTIL.createConnection("95.111.236.242/murad", "murat", "Murat2021#");
         Statement st = connection.createStatement();
         st.setFetchSize(250);
-        ResultSet rs = st.executeQuery(sql1);
-        int a = 0;
-        int b = 0;
-        int c = 0;
-        long startTime = System.currentTimeMillis();
+        ResultSet rs = st.executeQuery(sql);
+
         while (rs.next()) {
             long startTimeOne = System.currentTimeMillis();
-            String color = "";
-            String imageUrl = rs.getString(3);
-            if (imageUrl != null && imageUrl.length() > 0) {
-                try {
-                    String fileImage = rs.getString(2) + "_" + imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
-                    Request request = new Request.Builder().url(imageUrl)
-                            .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36")
-                            .build();
-                    try (Response response = client.newCall(request).execute()) {
-                        try (InputStream in = response.body().byteStream()) {
-                            Thumbnails.of(in)
-                                    .size(360, 360).keepAspectRatio(true)
-                                    .outputQuality(0.8)
-                                    .toFile("C:/Users/Murad/Desktop/tmp/" + fileImage);
-                        }
+            String color = ANSI_GREEN;
+            String unical_id = rs.getString(2);
+
+            try {
+                String images[] = (String[]) rs.getArray(3).getArray();
+                if (images.length > 0) {
+                    if (downloadAndScale(images, unical_id, client)) {
+                        success++;
+                    } else {
+                        throw new Exception("Не удалось скачать ни один файл из продукта: " + unical_id);
                     }
-                    color = ANSI_GREEN;
-                    b++;
-                } catch (Exception e) {
-                    System.err.println(e.getMessage() + ": " + imageUrl);
-                    color = ANSI_RED;
-                    a++;
-                } finally {
-                    long endTimeOne = System.currentTimeMillis();
-                    long durationOne = (endTimeOne - startTimeOne);
-                    System.out.println(color + threadName + c++ + " " + imageUrl + " " + durationOne + " ms" + " / " + durationOne / 1000 % 60 + " s" + ANSI_RESET);
+                } else {
+                    throw new Exception("Нет ни одной картинки у продукта: " + unical_id);
                 }
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+                color = ANSI_RED;
+                bad++;
+            } finally {
+                long endTimeOne = System.currentTimeMillis();
+                long durationOne = (endTimeOne - startTimeOne);
+                System.out.println(color + threadName + total + " " + unical_id + " " + durationOne + " ms" + " / " + durationOne / 1000 % 60 + " s" + ANSI_RESET);
+                total++;
             }
         }
+
         long endTime = System.currentTimeMillis();
         long duration = (endTime - startTime);
         String time = String.format("%02d:%02d:%02d", duration / 1000 / 3600, duration / 1000 / 60 % 60, duration / 1000 % 60);
-        System.out.println(threadName + "Всего затрачено: " + time + " пропущено " + a + " сконвертированно " + b);
+        System.out.println(threadName + "Всего затрачено: " + time + " пропущено " + bad + " сконвертированно " + success);
         rs.close();
         st.close();
         connection.close();
     }
 
+    private static boolean downloadAndScale(String[] images, String unical_id, OkHttpClient client) {
+        for (String imageUrl : images) {
+            String fileImage = unical_id + "_" + imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+            Request request = new Request.Builder().url(imageUrl)
+                    .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36")
+                    .build();
+            try {
+                try (Response response = client.newCall(request).execute()) {
+                    try (InputStream in = response.body().byteStream()) {
+                        Thumbnails.of(in)
+                                .size(360, 360).keepAspectRatio(true)
+                                .outputQuality(0.8)
+                                .toFile("C:/Users/Murad/Desktop/tmp/" + fileImage);
+                    }
+                }
+            } catch (Exception e) {
+                continue; //неудача переходим к следующему
+            }
+            break; //скачали хотя бы одну выходим из цикла
+        }
+        return true;
+    }
 
     private static OkHttpClient.Builder configureToIgnoreCertificate(OkHttpClient.Builder builder) {
         try {
