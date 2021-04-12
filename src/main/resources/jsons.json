@@ -1,0 +1,261 @@
+{
+  "datafeedId": "1",
+  "advertiser": "awin",
+  "dbSource": {
+    "serverIp": "localhost:5432",
+    "dataBase": "postgres",
+    "user": "murat",
+    "password": "Murat2021#",
+    "tableName": "awin_1"
+  },
+  "dbTarget": {
+    "serverIp": "localhost:5432",
+    "dataBase": "mobiex",
+    "user": "murat",
+    "password": "Murat2021#",
+    "tableName": "products"
+  },
+  "columns": {
+    "unical_id": {
+      "columnsSource": [
+        "aw_product_id"
+      ],
+      "update": false,
+      "comparisonField": true
+    },
+    "tags": {
+      "columnsSource": [
+        "merchant_category",
+        "category_name",
+        "keywords",
+        "merchant_product_category_path",
+        "merchant_product_second_category",
+        "merchant_product_third_category"
+      ],
+      "update": false,
+      "comparisonField": false
+    },
+    "partner_link": {
+      "columnsSource": [
+        "aw_deep_link"
+      ],
+      "update": true,
+      "comparisonField": false
+    },
+    "ean": {
+      "columnsSource": [
+        "ean"
+      ],
+      "update": false,
+      "comparisonField": false
+    },
+    "alias": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "title": {
+      "columnsSource": [
+        "product_name"
+      ],
+      "update": false,
+      "comparisonField": false
+    },
+    "images": {
+      "columnsSource": [
+        "merchant_image_url",
+        "alternate_image",
+        "alternate_image_two",
+        "alternate_image_three",
+        "alternate_image_four"
+      ],
+      "update": false,
+      "comparisonField": false
+    },
+    "seo_title": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "description": {
+      "columnsSource": [
+        "description"
+      ],
+      "update": false,
+      "comparisonField": false
+    },
+    "smart_description": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "seo_description": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "brand_name": {
+      "columnsSource": [
+        "brand_name"
+      ],
+      "update": false,
+      "comparisonField": false
+    },
+    "brand_id": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "price": {
+      "columnsSource": [
+        "search_price"
+      ],
+      "update": true,
+      "comparisonField": false
+    },
+    "price_old": {
+      "columnsSource": [
+        "product_price_old"
+      ],
+      "update": true,
+      "comparisonField": false
+    },
+    "category": {
+      "columnsSource": [
+        "category_name"
+      ],
+      "update": false,
+      "comparisonField": false
+    },
+    "category_id": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "category_path": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "shop_name": {
+      "columnsSource": [
+        "merchant_name"
+      ],
+      "update": false,
+      "comparisonField": false
+    },
+    "shop_id": {
+      "columnsSource": [
+        "merchant_id"
+      ],
+      "update": false,
+      "comparisonField": false
+    },
+    "shop_category_path": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "shop_category_id": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "delivery_time": {
+      "columnsSource": [
+        "delivery_time"
+      ],
+      "update": true,
+      "comparisonField": false
+    },
+    "delivery_price": {
+      "columnsSource": [
+        "delivery_cost"
+      ],
+      "update": true,
+      "comparisonField": false
+    },
+    "propertie_style": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "propertie_color": {
+      "columnsSource": [
+        "colour"
+      ],
+      "update": false,
+      "comparisonField": false
+    },
+    "propertie_material": {
+      "columnsSource": [
+        "fashion_material"
+      ],
+      "update": false,
+      "comparisonField": false
+    },
+    "deal_time_from": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "deal_time_to": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "propertie_energy": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "propertie_size": {
+      "columnsSource": [
+        "fashion_size"
+      ],
+      "update": false,
+      "comparisonField": false
+    },
+    "propertie_bank_sale": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "propertie_rating": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "propertie_rating_sum": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "propertie_height": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "propertie_width": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "propertie_length": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    },
+    "propertie_deep": {
+      "columnsSource": null,
+      "update": false,
+      "comparisonField": false
+    }
+  },
+  "downloadImages": {
+    "targetFolder": "/media/images/database_name/awin/",
+    "tableName": "products",
+    "rowName": "images",
+    "autoStart": true
+  }
+}

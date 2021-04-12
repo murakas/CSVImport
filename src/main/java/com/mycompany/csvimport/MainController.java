@@ -327,4 +327,12 @@ public class MainController {
 
         return GSON.toJson(resJson);
     }
+
+    @POST
+    @Path("/downloadImages")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public String downloadImages(String updateJson) {
+        return ";";
+    }
 }

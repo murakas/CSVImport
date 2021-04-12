@@ -1,5 +1,6 @@
-package com.mycompany.csvimport;
+package com.mycompany.csvimport.test;
 
+import com.mycompany.csvimport.Util;
 import net.coobird.thumbnailator.Thumbnails;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
